@@ -5,9 +5,17 @@ import (
 	"io/ioutil"
 )
 
+type BrokerConfig struct {
+	Uri string `toml:"uri"`
+}
+
+type MetaConfig struct {
+	Topic string `toml:"topic"`
+}
+
 type Config struct {
-	BrokerUri string `toml:"broker.uri"`
-	MetaTopic string `toml:"meta.topic"`
+	Broker BrokerConfig `toml:"broker"`
+	Meta   MetaConfig   `toml:"meta"`
 }
 
 func LoadConfig(filename string) *Config {
@@ -17,7 +25,7 @@ func LoadConfig(filename string) *Config {
 	}
 
 	config := Config{}
-	_, err = toml.Decode(data, &config)
+	_, err = toml.Decode(string(data), &config)
 	if err != nil {
 		panic(err)
 	}
