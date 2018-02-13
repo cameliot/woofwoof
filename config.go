@@ -60,5 +60,9 @@ func (self *Config) AlpacaRoutes() alpaca.Routes {
 		"meta": self.Meta.Topic,
 	}
 
+	for _, service := range self.Services {
+		routes[service.Handle] = service.Topic
+	}
+
 	return routes
 }
