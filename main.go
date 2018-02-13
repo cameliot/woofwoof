@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/cameliot/alpaca"
 )
@@ -37,12 +38,27 @@ func main() {
 
 	fmt.Println(config)
 
-	actions, _ := alpaca.DialMqtt(
+	actions, dispatch := alpaca.DialMqtt(
 		config.Broker.Uri,
 		config.AlpacaRoutes(),
 	)
 
+	// Periodically trigger pings
+	go func() {
+		dispatch(Ping("*"))
+		time.Sleep(1 * time.Minute)
+	}()
+
+	// Create service watchers
+	watchers := []*ServiceWatcher{}
+	for _, serviceConfig := range config.Services {
+		watchers = append(watchers, NewServiceWatcher(&serviceConfig))
+	}
+
 	for action := range actions {
-		fmt.Println("RECV action:", action)
+		fmt.Println(action)
+		for _, watcher := range watchers {
+			watcher.Handle(action)
+		}
 	}
 }
