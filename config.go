@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/BurntSushi/toml"
+	"github.com/cameliot/alpaca"
+
 	"io/ioutil"
 )
 
@@ -13,9 +15,26 @@ type MetaConfig struct {
 	Topic string `toml:"topic"`
 }
 
+type WatchConfig struct {
+	Group string `toml:"group"`
+
+	Request string `toml:"request"`
+	Success string `toml:"success"`
+	Error   string `toml:"error"`
+}
+
+type ServiceConfig struct {
+	Handle  string        `toml:"handle"`
+	Topic   string        `toml:"topic"`
+	Watches []WatchConfig `toml:"watch"`
+}
+
 type Config struct {
+	Herd   string       `toml:"name"`
 	Broker BrokerConfig `toml:"broker"`
 	Meta   MetaConfig   `toml:"meta"`
+
+	Services []ServiceConfig `toml:"services"`
 }
 
 func LoadConfig(filename string) *Config {
@@ -31,4 +50,15 @@ func LoadConfig(filename string) *Config {
 	}
 
 	return &config
+}
+
+/*
+Create alpaca routes from config
+*/
+func (self *Config) AlpacaRoutes() alpaca.Routes {
+	routes := alpaca.Routes{
+		"meta": self.Meta.Topic,
+	}
+
+	return routes
 }
