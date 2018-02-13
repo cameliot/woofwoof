@@ -16,17 +16,15 @@ type MetaConfig struct {
 }
 
 type WatchConfig struct {
-	Group string `toml:"group"`
-
 	Request string `toml:"request"`
 	Success string `toml:"success"`
 	Error   string `toml:"error"`
 }
 
 type ServiceConfig struct {
-	Handle  string        `toml:"handle"`
-	Topic   string        `toml:"topic"`
-	Watches []WatchConfig `toml:"watch"`
+	Handle  string                 `toml:"handle"`
+	Topic   string                 `toml:"topic"`
+	Watches map[string]WatchConfig `toml:"watch"`
 }
 
 type Config struct {

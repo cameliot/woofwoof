@@ -35,6 +35,8 @@ func main() {
 	// Load config from file
 	config := LoadConfig(args[0])
 
+	fmt.Println(config)
+
 	actions, _ := alpaca.DialMqtt(
 		config.Broker.Uri,
 		config.AlpacaRoutes(),
