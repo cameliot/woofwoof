@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/cameliot/alpaca"
 	"time"
 )
@@ -18,8 +17,6 @@ type PongPayload struct {
 Decode int64 millisecond timestamp
 */
 func (payload PongPayload) Timestamp() time.Time {
-	fmt.Println("Decoding TimestampMS:", payload.TimestampMs)
-
 	sec := payload.TimestampMs / 1000
 	nsec := 1000000 * (payload.TimestampMs % 1000)
 
