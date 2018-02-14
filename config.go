@@ -7,6 +7,10 @@ import (
 	"io/ioutil"
 )
 
+type HttpConfig struct {
+	Listen string `toml:"listen"`
+}
+
 type BrokerConfig struct {
 	Uri string `toml:"uri"`
 }
@@ -29,6 +33,7 @@ type ServiceConfig struct {
 
 type Config struct {
 	Herd   string       `toml:"name"`
+	Http   HttpConfig   `toml:"http"`
 	Broker BrokerConfig `toml:"broker"`
 	Meta   MetaConfig   `toml:"meta"`
 
