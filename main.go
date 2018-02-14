@@ -100,7 +100,7 @@ func main() {
 	// Create service watchers
 	watchers := []*ServiceWatcher{}
 	for _, serviceConfig := range config.Services {
-		watchers = append(watchers, NewServiceWatcher(serviceConfig))
+		watchers = append(watchers, NewServiceWatcher(serviceConfig, dispatch))
 	}
 
 	// Start HTTP
