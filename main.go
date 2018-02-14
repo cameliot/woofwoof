@@ -92,7 +92,6 @@ func main() {
 	// Periodically trigger pings
 	go func() {
 		for {
-			log.Println("Dispatching PING *")
 			dispatch(Ping("*"))
 			time.Sleep(1 * time.Minute)
 		}
