@@ -12,7 +12,7 @@ type GroupReport struct {
 	LastSuccess time.Time `json:"last_success"`
 	LastError   time.Time `json:"last_error"`
 
-	TimeToReponse time.Duration `json:"time_to_response"`
+	TimeToReponse time.Duration `json:"time_to_response_us"`
 }
 
 type ServiceReport struct {
@@ -149,6 +149,8 @@ func (self *ServiceWatcher) Report() ServiceReport {
 		}
 
 		responseTime := lastResponse.Sub(group.lastRequest)
+		// Use microseconds instead of nanoseconds,
+		responseTime /= 1000
 
 		// Make report
 		groupsReport[name] = GroupReport{
