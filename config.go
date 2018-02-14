@@ -32,7 +32,7 @@ type Config struct {
 	Broker BrokerConfig `toml:"broker"`
 	Meta   MetaConfig   `toml:"meta"`
 
-	Services []ServiceConfig `toml:"services"`
+	Services []*ServiceConfig `toml:"services"`
 }
 
 func LoadConfig(filename string) *Config {

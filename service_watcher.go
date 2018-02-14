@@ -41,6 +41,7 @@ type ServiceWatcher struct {
 Initialize new service watcher
 */
 func NewServiceWatcher(config *ServiceConfig) *ServiceWatcher {
+	fmt.Println("Created Service:", config)
 	// Create watch groups
 	watchGroups := map[string]WatchGroup{}
 	for handle, watchConfig := range config.Watches {
@@ -61,15 +62,20 @@ func NewServiceWatcher(config *ServiceConfig) *ServiceWatcher {
 Handle incoming actions and update watch groups
 */
 func (self *ServiceWatcher) Handle(action alpaca.Action) {
-	switch action.Type {
-	case "@meta/PONG":
+	if action.Type == PONG {
 		self.handlePong(action)
 	}
 }
 
 func (self *ServiceWatcher) handlePong(action alpaca.Action) {
 	// Decode Payload
-	fmt.Println("Handleing action:", action)
+	pong := DecodePongPayload(action)
+	if pong.Handle != self.config.Handle {
+		return // Not our concern
+	}
+
+	// Update heartbeat
+	self.lastHeartbeat = pong.Timestamp()
 }
 
 /*
