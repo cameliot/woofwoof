@@ -16,6 +16,7 @@ type GroupReport struct {
 }
 
 type ServiceReport struct {
+	Manifest      IamaPayload            `json:"manifest"`
 	LastHeartbeat time.Time              `json:"last_heartbeat"`
 	Groups        map[string]GroupReport `json:"groups"`
 }
@@ -47,6 +48,7 @@ func (self *WatchGroup) Update(handle string) {
 type ServiceWatcher struct {
 	config *ServiceConfig
 
+	manifest      IamaPayload
 	lastHeartbeat time.Time
 	watchGroups   map[string]*WatchGroup
 }
@@ -54,7 +56,7 @@ type ServiceWatcher struct {
 /*
 Initialize new service watcher
 */
-func NewServiceWatcher(config *ServiceConfig) *ServiceWatcher {
+func NewServiceWatcher(config *ServiceConfig, dispatch alpaca.Dispatch) *ServiceWatcher {
 	// Create watch groups
 	watchGroups := map[string]*WatchGroup{}
 	for handle, watchConfig := range config.Watches {
@@ -68,6 +70,15 @@ func NewServiceWatcher(config *ServiceConfig) *ServiceWatcher {
 		watchGroups: watchGroups,
 	}
 
+	// Periodically request WHOIS information from
+	// this service
+	go func() {
+		for {
+			dispatch(Whois(config.Handle))
+			time.Sleep(1 * time.Minute)
+		}
+	}()
+
 	return watcher
 }
 
@@ -77,6 +88,9 @@ Handle incoming actions and update watch groups
 func (self *ServiceWatcher) Handle(action alpaca.Action) {
 	if action.Type == PONG {
 		self.handlePong(action)
+		return
+	} else if action.Type == IAMA {
+		self.handleIama(action)
 		return
 	}
 
@@ -98,7 +112,7 @@ func (self *ServiceWatcher) Handle(action alpaca.Action) {
 func (self *ServiceWatcher) handlePong(action alpaca.Action) {
 
 	// Decode Payload
-	pong := DecodePongPayload(action)
+	pong := DecodePong(action)
 	if pong.Handle != self.config.Handle {
 		return // Not our concern
 	}
@@ -109,6 +123,17 @@ func (self *ServiceWatcher) handlePong(action alpaca.Action) {
 		"Received Heartbeat for", pong.Handle,
 		":", pong.Timestamp(),
 	)
+}
+
+func (self *ServiceWatcher) handleIama(action alpaca.Action) {
+	// Decode Payload
+	iama := DecodeIama(action)
+	if iama.Handle != self.config.Handle {
+		return // Not our concern
+	}
+
+	log.Println("Received Service Manifest for:", iama.Handle)
+	self.manifest = iama
 }
 
 /*
@@ -136,6 +161,7 @@ func (self *ServiceWatcher) Report() ServiceReport {
 
 	report := ServiceReport{
 		LastHeartbeat: self.lastHeartbeat,
+		Manifest:      self.manifest,
 		Groups:        groupsReport,
 	}
 

@@ -7,6 +7,8 @@ import (
 
 const PING = "@meta/PING"
 const PONG = "@meta/PONG"
+const WHOIS = "@meta/WHOIS"
+const IAMA = "@meta/IAMA"
 
 type PongPayload struct {
 	TimestampMs int64  `json:"timestamp"`
@@ -23,8 +25,22 @@ func (payload PongPayload) Timestamp() time.Time {
 	return time.Unix(sec, nsec).UTC()
 }
 
-func DecodePongPayload(action alpaca.Action) PongPayload {
+func DecodePong(action alpaca.Action) PongPayload {
 	payload := PongPayload{}
+	action.DecodePayload(&payload)
+
+	return payload
+}
+
+type IamaPayload struct {
+	Name        string `json:"name"`
+	Handle      string `json:"handle"`
+	Version     string `json:"version"`
+	Description string `json:"description"`
+}
+
+func DecodeIama(action alpaca.Action) IamaPayload {
+	payload := IamaPayload{}
 	action.DecodePayload(&payload)
 
 	return payload
@@ -33,6 +49,13 @@ func DecodePongPayload(action alpaca.Action) PongPayload {
 func Ping(handle string) alpaca.Action {
 	return alpaca.Action{
 		Type:    PING,
+		Payload: handle,
+	}
+}
+
+func Whois(handle string) alpaca.Action {
+	return alpaca.Action{
+		Type:    WHOIS,
 		Payload: handle,
 	}
 }
