@@ -91,8 +91,11 @@ func main() {
 
 	// Periodically trigger pings
 	go func() {
-		dispatch(Ping("*"))
-		time.Sleep(1 * time.Minute)
+		for {
+			log.Println("Dispatching PING *")
+			dispatch(Ping("*"))
+			time.Sleep(1 * time.Minute)
+		}
 	}()
 
 	// Create service watchers
