@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/cameliot/alpaca"
 	"time"
 )
@@ -9,7 +10,7 @@ const PING = "@meta/PING"
 const PONG = "@meta/PONG"
 
 type PongPayload struct {
-	TimestampMs int64  `json"timestamp"`
+	TimestampMs int64  `json:"timestamp"`
 	Handle      string `json:"handle"`
 }
 
@@ -17,6 +18,8 @@ type PongPayload struct {
 Decode int64 millisecond timestamp
 */
 func (payload PongPayload) Timestamp() time.Time {
+	fmt.Println("Decoding TimestampMS:", payload.TimestampMs)
+
 	sec := payload.TimestampMs / 1000
 	nsec := 1000000 * (payload.TimestampMs % 1000)
 
@@ -25,7 +28,8 @@ func (payload PongPayload) Timestamp() time.Time {
 
 func DecodePongPayload(action alpaca.Action) PongPayload {
 	payload := PongPayload{}
-	action.DecodePayload(&payload)
+	err := action.DecodePayload(&payload)
+	fmt.Println("err:", err)
 
 	return payload
 }

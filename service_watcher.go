@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/cameliot/alpaca"
+	"log"
 	"time"
 )
 
@@ -15,11 +15,8 @@ type GroupReport struct {
 }
 
 type ServiceReport struct {
-	Handle string `json:"handle"`
-
-	LastHeartbeat time.Time `json:"last_heartbeat"`
-
-	Groups map[string]GroupReport `json:"groups"`
+	LastHeartbeat time.Time              `json:"last_heartbeat"`
+	Groups        map[string]GroupReport `json:"groups"`
 }
 
 type WatchGroup struct {
@@ -41,7 +38,6 @@ type ServiceWatcher struct {
 Initialize new service watcher
 */
 func NewServiceWatcher(config *ServiceConfig) *ServiceWatcher {
-	fmt.Println("Created Service:", config)
 	// Create watch groups
 	watchGroups := map[string]WatchGroup{}
 	for handle, watchConfig := range config.Watches {
@@ -68,6 +64,7 @@ func (self *ServiceWatcher) Handle(action alpaca.Action) {
 }
 
 func (self *ServiceWatcher) handlePong(action alpaca.Action) {
+
 	// Decode Payload
 	pong := DecodePongPayload(action)
 	if pong.Handle != self.config.Handle {
@@ -76,6 +73,10 @@ func (self *ServiceWatcher) handlePong(action alpaca.Action) {
 
 	// Update heartbeat
 	self.lastHeartbeat = pong.Timestamp()
+	log.Println(
+		"Received Heartbeat for", pong.Handle,
+		":", pong.Timestamp(),
+	)
 }
 
 /*
@@ -102,7 +103,6 @@ func (self *ServiceWatcher) Report() ServiceReport {
 	}
 
 	report := ServiceReport{
-		Handle:        self.config.Handle,
 		LastHeartbeat: self.lastHeartbeat,
 		Groups:        groupsReport,
 	}
