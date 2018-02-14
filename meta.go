@@ -20,7 +20,7 @@ func (payload PongPayload) Timestamp() time.Time {
 	sec := payload.TimestampMs / 1000
 	nsec := 1000000 * (payload.TimestampMs % 1000)
 
-	return time.Unix(sec, nsec)
+	return time.Unix(sec, nsec).UTC()
 }
 
 func DecodePongPayload(action alpaca.Action) PongPayload {
