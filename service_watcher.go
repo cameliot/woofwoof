@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/cameliot/alpaca"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -27,11 +28,27 @@ type WatchGroup struct {
 	lastError   time.Time
 }
 
+/*
+Update times matching the configured action mapping
+*/
+func (self *WatchGroup) Update(handle string) {
+	switch handle {
+	case self.config.Request:
+		self.lastRequest = time.Now().UTC()
+		break
+	case self.config.Success:
+		self.lastSuccess = time.Now().UTC()
+		break
+	case self.config.Error:
+		self.lastError = time.Now().UTC()
+	}
+}
+
 type ServiceWatcher struct {
 	config *ServiceConfig
 
 	lastHeartbeat time.Time
-	watchGroups   map[string]WatchGroup
+	watchGroups   map[string]*WatchGroup
 }
 
 /*
@@ -39,10 +56,10 @@ Initialize new service watcher
 */
 func NewServiceWatcher(config *ServiceConfig) *ServiceWatcher {
 	// Create watch groups
-	watchGroups := map[string]WatchGroup{}
+	watchGroups := map[string]*WatchGroup{}
 	for handle, watchConfig := range config.Watches {
-		watchGroups[handle] = WatchGroup{
-			config: &watchConfig,
+		watchGroups[handle] = &WatchGroup{
+			config: watchConfig,
 		}
 	}
 
@@ -60,6 +77,21 @@ Handle incoming actions and update watch groups
 func (self *ServiceWatcher) Handle(action alpaca.Action) {
 	if action.Type == PONG {
 		self.handlePong(action)
+		return
+	}
+
+	// Handle all other incoming actions, matching
+	// this service
+	if !strings.HasPrefix(action.Type, "@"+self.config.Handle) {
+		return // Not our concern
+	}
+
+	// Get action handle
+	tokens := strings.Split(action.Type, "/")
+	handle := tokens[len(tokens)-1]
+
+	for _, group := range self.watchGroups {
+		group.Update(handle)
 	}
 }
 
@@ -92,6 +124,9 @@ func (self *ServiceWatcher) Report() ServiceReport {
 		}
 
 		responseTime := lastResponse.Sub(group.lastRequest)
+		if responseTime < 0 {
+			responseTime = -1 // This should make error matchin easier
+		}
 
 		// Make report
 		groupsReport[name] = GroupReport{

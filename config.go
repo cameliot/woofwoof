@@ -26,9 +26,9 @@ type WatchConfig struct {
 }
 
 type ServiceConfig struct {
-	Handle  string                 `toml:"handle"`
-	Topic   string                 `toml:"topic"`
-	Watches map[string]WatchConfig `toml:"watch"`
+	Handle  string                  `toml:"handle"`
+	Topic   string                  `toml:"topic"`
+	Watches map[string]*WatchConfig `toml:"watch"`
 }
 
 type Config struct {
