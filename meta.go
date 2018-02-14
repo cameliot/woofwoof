@@ -25,8 +25,7 @@ func (payload PongPayload) Timestamp() time.Time {
 
 func DecodePongPayload(action alpaca.Action) PongPayload {
 	payload := PongPayload{}
-	err := action.DecodePayload(&payload)
-	fmt.Println("err:", err)
+	action.DecodePayload(&payload)
 
 	return payload
 }
