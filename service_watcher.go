@@ -124,9 +124,6 @@ func (self *ServiceWatcher) Report() ServiceReport {
 		}
 
 		responseTime := lastResponse.Sub(group.lastRequest)
-		if responseTime < 0 {
-			responseTime = -1 // This should make error matchin easier
-		}
 
 		// Make report
 		groupsReport[name] = GroupReport{
