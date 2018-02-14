@@ -42,6 +42,9 @@ func serveHttp(httpConfig HttpConfig, watchers []*ServiceWatcher) {
 				report[watcher.config.Handle] = watcher.Report()
 			}
 
+			// Set Headers
+			res.Header().Set("Content-Type", "application/json")
+
 			// Write response
 			json.NewEncoder(res).Encode(report)
 		})
