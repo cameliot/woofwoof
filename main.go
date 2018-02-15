@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cameliot/alpaca"
+	"github.com/cameliot/alpaca/meta"
 )
 
 var version = "unknown"
@@ -95,7 +96,7 @@ func main() {
 	// Periodically trigger pings
 	go func() {
 		for {
-			dispatch(Ping("*"))
+			dispatch(meta.Ping("*"))
 			time.Sleep(1 * time.Minute)
 		}
 	}()
