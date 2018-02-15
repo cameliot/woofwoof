@@ -2,10 +2,20 @@ package main
 
 import (
 	"github.com/cameliot/alpaca"
+	"github.com/cameliot/alpaca/meta"
+
 	"log"
 	"strings"
 	"time"
 )
+
+type Manifest struct {
+	Name        string    `json:"name"`
+	Handle      string    `json:"handle"`
+	Version     string    `json:"version"`
+	Description string    `json:"description"`
+	StartedAt   time.Time `json:"started_at"`
+}
 
 type GroupReport struct {
 	LastRequest time.Time `json:"last_request"`
@@ -16,7 +26,7 @@ type GroupReport struct {
 }
 
 type ServiceReport struct {
-	Manifest      IamaPayload            `json:"manifest"`
+	Manifest      Manifest               `json:"manifest"`
 	LastHeartbeat time.Time              `json:"last_heartbeat"`
 	Groups        map[string]GroupReport `json:"groups"`
 }
@@ -73,7 +83,7 @@ func (self *WatchGroup) Update(handle string) {
 type ServiceWatcher struct {
 	config *ServiceConfig
 
-	manifest      IamaPayload
+	iama          meta.IamaPayload
 	lastHeartbeat time.Time
 	watchGroups   map[string]*WatchGroup
 }
@@ -99,7 +109,7 @@ func NewServiceWatcher(config *ServiceConfig, dispatch alpaca.Dispatch) *Service
 	// this service
 	go func() {
 		for {
-			dispatch(Whois(config.Handle))
+			dispatch(meta.Whois(config.Handle))
 			time.Sleep(1 * time.Minute)
 		}
 	}()
@@ -111,10 +121,10 @@ func NewServiceWatcher(config *ServiceConfig, dispatch alpaca.Dispatch) *Service
 Handle incoming actions and update watch groups
 */
 func (self *ServiceWatcher) Handle(action alpaca.Action) {
-	if action.Type == PONG {
+	if action.Type == meta.PONG {
 		self.handlePong(action)
 		return
-	} else if action.Type == IAMA {
+	} else if action.Type == meta.IAMA {
 		self.handleIama(action)
 		return
 	}
@@ -137,7 +147,7 @@ func (self *ServiceWatcher) Handle(action alpaca.Action) {
 func (self *ServiceWatcher) handlePong(action alpaca.Action) {
 
 	// Decode Payload
-	pong := DecodePong(action)
+	pong := meta.DecodePong(action)
 	if pong.Handle != self.config.Handle {
 		return // Not our concern
 	}
@@ -152,13 +162,13 @@ func (self *ServiceWatcher) handlePong(action alpaca.Action) {
 
 func (self *ServiceWatcher) handleIama(action alpaca.Action) {
 	// Decode Payload
-	iama := DecodeIama(action)
+	iama := meta.DecodeIama(action)
 	if iama.Handle != self.config.Handle {
 		return // Not our concern
 	}
 
 	log.Println("Received Service Manifest for:", iama.Handle)
-	self.manifest = iama
+	self.iama = iama
 }
 
 /*
@@ -177,9 +187,18 @@ func (self *ServiceWatcher) Report() ServiceReport {
 		}
 	}
 
+	// Decode iama
+	manifest := Manifest{
+		Name:        self.iama.Name,
+		Handle:      self.iama.Handle,
+		Version:     self.iama.Version,
+		Description: self.iama.Description,
+		StartedAt:   self.iama.StartedAt(),
+	}
+
 	report := ServiceReport{
 		LastHeartbeat: self.lastHeartbeat,
-		Manifest:      self.manifest,
+		Manifest:      manifest,
 		Groups:        groupsReport,
 	}
 
